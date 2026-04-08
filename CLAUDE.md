@@ -1,7 +1,7 @@
 # design-md — Wrapper VoltAgent/awesome-design-md
 
 ## Version
-0.1.0 (alpha — local only, pas encore déployé)
+0.1.0 (alpha — local + remote studrixlab/design-md, pas encore déployé AX102)
 
 ## Purpose
 Wrapper Python (stdlib only) qui expose le contenu du repo public
@@ -15,11 +15,14 @@ CLI consommable par les agents OS-EMPIRE qui génèrent de l'UI.
 | `design_md/parser.py` | `DesignMdParser` regex-based — 0 dépendance markdown |
 | `design_md/catalog.py` | Liste hardcodée des 58 sites + mapping sector |
 | `design_md/cache.py` | `DataCache` — accès filesystem au submodule git |
-| `data/awesome-design-md/` | Submodule git (NON tracké directement, ajouté par opérateur) |
-| `tests/` | pytest, fixture stripe minimaliste, smoke tests CLI |
+| `design_md/mcp_server.py` | FastMCP server — 4 tools (optional dep `mcp`) |
+| `data/awesome-design-md/` | Submodule git trackée via `.gitmodules` |
+| `tests/` | pytest, fixture stripe multi-format, 52 tests |
 
 ## Conventions
-- Python 3.11+, **stdlib only** (zéro dépendance runtime).
+- Python 3.11+, **stdlib only** pour le core (zéro dépendance runtime).
+- Seule exception : `mcp_server.py` importe le package `mcp` (FastMCP),
+  déclaré en optional dep `[mcp]`.
 - argparse (PAS click ni typer).
 - Type hints partout, docstrings Google style.
 - Logging stdlib (`logging.getLogger(__name__)`), pas de `print()` sauf
@@ -45,20 +48,26 @@ pytest tests -v
 
 ## Format DESIGN.md upstream
 Les fichiers `DESIGN.md` du repo VoltAgent suivent un format consistant à 100%
-sur les 58 sites :
+sur les 58 sites, avec sections numérotées :
 
-1. `## Visual Theme & Atmosphere`
-2. `## Color Palette & Roles`
-3. `## Typography Rules`
-4. `## Component Stylings`
-5. `## Layout Principles`
-6. `## Depth & Elevation`
-7. `## Do's and Don'ts`
-8. `## Responsive Behavior`
-9. `## Agent Prompt Guide`
+1. `## 1. Visual Theme & Atmosphere`
+2. `## 2. Color Palette & Roles`
+3. `## 3. Typography Rules`
+4. `## 4. Component Stylings`
+5. `## 5. Layout Principles`
+6. `## 6. Depth & Elevation`
+7. `## 7. Do's and Don'ts`
+8. `## 8. Responsive Behavior`
+9. `## 9. Agent Prompt Guide`
 
-Couleurs : `- **Name** (#hex): Description`
-Regex utilisée : `r'-\s*\*\*([^*]+)\*\*\s*\(([#0-9a-fA-F]+)\):\s*(.*)'`
+Couleurs (3 formats réels) :
+- Simple : `` - **Name** (`#533afd`): Description ``
+- Multi-hex : `` - **Name** (`#010102` / `#08090a`): Description ``
+- Avec rgba : `` - **Name** (`rgba(0,0,0,0.95)` / `#000000f2`): Description ``
+
+Parser : `_COLOR_LINE_RE` extrait name/values_blob/description, puis
+`_HEX_RE = re.compile(r"#[0-9a-fA-F]{3,8}")` extrait tous les hex du blob.
+Les bullets pure-rgba (sans hex) sont volontairement skipped.
 
 ## Infrastructure
 Source de vérité : `/opt/jarvis/INFRA_MAP.md` (CX33).
@@ -66,4 +75,9 @@ Source de vérité : `/opt/jarvis/INFRA_MAP.md` (CX33).
 - AX102 (10.44.0.2) : ATELIER (déploiement futur sous `/opt/empire/tools/design-md/`)
 
 ## State
-ALPHA — code écrit, tests à valider par l'orchestrateur.
+ALPHA — code écrit, 52/52 tests pass, ruff clean, format clean.
+Remote push : https://github.com/studrixlab/design-md
+
+## Version history
+- **0.1.0** (2026-04-08) — Initial release. CLI + FastMCP server, 52 tests,
+  parser gère les 3 formats réels (simple/multi-hex/rgba).

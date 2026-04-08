@@ -10,6 +10,9 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.4.0",
 ]
+mcp = [
+    "mcp>=1.0",
+]
 
 [project.scripts]
 design-md = "design_md.cli:main"

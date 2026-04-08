@@ -2,7 +2,7 @@
   "version": "0.1.0",
   "state": "alpha",
   "tests": "pass",
-  "tests_count": 36,
+  "tests_count": 52,
   "lint": "clean",
   "gate": "pending",
   "last_deploy": null,

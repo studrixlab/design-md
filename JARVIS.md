@@ -2,8 +2,8 @@
 
 **Type**: tool
 **Location**: local `C:\jarvis\tools\design-md\` (déploiement AX102 prévu)
-**Repo**: pas encore de remote
-**Status**: ALPHA
+**Repo**: https://github.com/studrixlab/design-md
+**Status**: ALPHA — 52/52 tests pass
 **Created**: 2026-04-07
 
 ## Purpose
@@ -13,15 +13,17 @@ de l'UI cohérente et non-générique.
 
 ## Dependencies
 - Python 3.11+
-- Stdlib only — zéro dépendance runtime
-- Git submodule `data/awesome-design-md` (ajouté hors wrapper par l'opérateur)
+- Core: stdlib only — zéro dépendance runtime
+- Optional `[mcp]`: `mcp>=1.0` (FastMCP) pour `design_md/mcp_server.py`
+- Git submodule `data/awesome-design-md` (tracké via `.gitmodules`)
 
 ## Key files
 - `design_md/cli.py` — entry point, subcommands list/get/search/update
-- `design_md/parser.py` — `DesignMdParser` regex-based
+- `design_md/parser.py` — `DesignMdParser` regex-based (simple/multi/rgba)
 - `design_md/catalog.py` — 58 sites + 7 secteurs
 - `design_md/cache.py` — `DataCache`, accès filesystem au submodule
-- `tests/fixtures/stripe_DESIGN.md` — fixture minimaliste 9 sections
+- `design_md/mcp_server.py` — FastMCP, 4 tools (list/get/search/info)
+- `tests/fixtures/stripe_DESIGN.md` — fixture avec 3 formats de couleurs
 
 ## How agents use it
 ```python
@@ -46,3 +48,16 @@ Ou via CLI dans un workflow shell :
 ```bash
 design-md get stripe --section colors --format json | jq .
 ```
+
+Ou via MCP server (pour Claude Code) — enregistrer dans `~/.claude/settings.json` :
+```json
+{
+  "mcpServers": {
+    "design-md": {
+      "command": "python",
+      "args": ["-m", "design_md.mcp_server"]
+    }
+  }
+}
+```
+Tools exposés : `design_md_list`, `design_md_get`, `design_md_search`, `design_md_info`.

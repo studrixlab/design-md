@@ -91,19 +91,56 @@ print(parsed["colors"])
 
 Codes de sortie : `0` OK, `1` erreur utilisateur (site inconnu, sector invalide, ...), `2` erreur système (lecture fichier impossible, ...).
 
+## MCP server (pour Claude Code et autres agents MCP)
+
+Un wrapper FastMCP est inclus dans `design_md/mcp_server.py`. Il expose 4
+outils aux clients MCP :
+
+| Tool MCP | Rôle |
+|----------|------|
+| `design_md_list(sector?)` | Liste des sites (filtrable par secteur) |
+| `design_md_get(site, section?)` | DESIGN.md complet ou une section |
+| `design_md_search(query, limit?)` | Grep cross-files (case-insensitive) |
+| `design_md_info()` | Version + état du cache + métadonnées |
+
+Installation de la dépendance MCP :
+
+```bash
+pip install -e ".[mcp]"
+```
+
+Enregistrement côté Claude Code — ajouter dans `~/.claude/settings.json`
+(ou `.mcp.json` à la racine d'un projet) :
+
+```json
+{
+  "mcpServers": {
+    "design-md": {
+      "command": "python",
+      "args": ["-m", "design_md.mcp_server"]
+    }
+  }
+}
+```
+
+Les erreurs sont renvoyées comme des payloads JSON structurés (`{"error":
+"unknown_site", ...}`) plutôt que des exceptions, pour que l'agent appelant
+puisse brancher dessus sans try/except.
+
 ## Layout
 
 ```
 design-md/
-├── design_md/        # Code package (stdlib only)
+├── design_md/        # Code package (stdlib only, sauf mcp_server)
 │   ├── __init__.py
 │   ├── __main__.py
 │   ├── cli.py        # argparse subcommands
 │   ├── parser.py     # DesignMdParser regex-based
 │   ├── catalog.py    # 58 sites + sectors
-│   └── cache.py      # Accès filesystem au submodule
-├── data/             # Submodule git VoltAgent/awesome-design-md (non tracké)
-├── tests/            # pytest, fixtures incluses
+│   ├── cache.py      # Accès filesystem au submodule
+│   └── mcp_server.py # FastMCP server (optional dep: mcp)
+├── data/             # Submodule git VoltAgent/awesome-design-md
+├── tests/            # pytest (52 tests), fixtures incluses
 ├── pyproject.toml
 └── README.md
 ```
