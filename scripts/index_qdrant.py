@@ -38,6 +38,12 @@ COLLECTION = os.environ.get("COLLECTION", "design_systems")
 VECTOR_SIZE = int(os.environ.get("VECTOR_SIZE", "1024"))
 BATCH = 30
 BODY_PAYLOAD_CAP = 5000
+# ``mxbai-embed-large`` silently rejects very long inputs with HTTP 500.
+# Empirically ~2000 chars (≈512 tokens) stays within the context window and
+# keeps enough signal for semantic retrieval. Long sections get a hard cap
+# with a retry at an even shorter cap if the first embed call still fails.
+EMBED_PRIMARY_CAP = 1800
+EMBED_RETRY_CAP = 900
 
 
 def _request(url: str, method: str = "GET", payload: dict | None = None) -> dict:
@@ -115,12 +121,17 @@ def main() -> int:
             body_stripped = body.strip()
             if not body_stripped:
                 continue
-            text = f"{site} :: {section_name}\n\n{body_stripped}"
+            header = f"{site} :: {section_name}\n\n"
+            primary_text = header + body_stripped[: EMBED_PRIMARY_CAP - len(header)]
             try:
-                vector = embed(text)
+                vector = embed(primary_text)
             except (urllib.error.URLError, urllib.error.HTTPError, KeyError) as err:
-                print(f"  embed failed {site}/{section_name}: {err}")
-                continue
+                retry_text = header + body_stripped[: EMBED_RETRY_CAP - len(header)]
+                try:
+                    vector = embed(retry_text)
+                except (urllib.error.URLError, urllib.error.HTTPError, KeyError) as err2:
+                    print(f"  embed failed {site}/{section_name}: {err} (retry: {err2})")
+                    continue
             if len(vector) != VECTOR_SIZE:
                 print(f"  WARNING: vector size mismatch {len(vector)} != {VECTOR_SIZE}")
             point_id += 1
