@@ -1,0 +1,10 @@
+{
+  "version": "0.1.0",
+  "state": "alpha",
+  "tests": "pass",
+  "tests_count": 36,
+  "lint": "clean",
+  "gate": "pending",
+  "last_deploy": null,
+  "owner": "kevin"
+}
